@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Shoe shoe</string>
+    <string name="no_orders_found">Không có đơn hàng nào</string>
+    <string name="error_loading_orders">Lỗi khi tải đơn hàng</string>
+    <string name="navigation_drawer_open">Mở menu</string>
+    <string name="navigation_drawer_close">Đóng menu</string>
+</resources>
