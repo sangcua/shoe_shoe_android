@@ -67,6 +67,11 @@
             android:exported="false"
             android:label="Thêm sản phẩm"
             android:parentActivityName=".views.activities.MainActivity" />
+        <activity
+            android:name=".views.activities.AdminOrderActivity"
+            android:exported="false"
+            android:label="Quản lý đơn hàng"
+            android:theme="@style/Theme.MyApplication" />
     </application>
 
 </manifest>

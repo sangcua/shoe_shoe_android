@@ -41,6 +41,9 @@ public class Order {
         public int getQuantity() { return quantity; }
     }
 
+    public Order(){
+
+    }
     public Order(String id, String userId, String name, String phone, List<OrderProduct> products,
                 String price, String address, String status, boolean deleted,
                 String createdAt, String updatedAt) {
@@ -69,4 +72,17 @@ public class Order {
     public boolean isDeleted() { return deleted; }
     public String getCreatedAt() { return createdAt; }
     public String getUpdatedAt() { return updatedAt; }
+
+    // Setters
+    public void setId(String id) { this.id = id; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public void setName(String name) { this.name = name; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public void setProducts(List<OrderProduct> products) { this.products = products; }
+    public void setPrice(String price) { this.price = price; }
+    public void setAddress(String address) { this.address = address; }
+    public void setStatus(String status) { this.status = status; }
+    public void setDeleted(boolean deleted) { this.deleted = deleted; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
 } 

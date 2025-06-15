@@ -1,22 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_home"
             android:icon="@drawable/ic_home"
             android:title="Trang chủ" />
         <item
+            android:id="@+id/nav_orders"
+            android:icon="@drawable/ic_order"
+            android:title="Quản lý đơn hàng" />
+        <item
             android:id="@+id/nav_categories"
             android:icon="@drawable/ic_category"
-            android:title="Danh mục" />
+            android:title="Quản lý danh mục" />
         <item
             android:id="@+id/nav_products"
             android:icon="@drawable/ic_product"
-            android:title="Sản phẩm" />
-        <item
-            android:id="@+id/nav_orders"
-            android:icon="@drawable/ic_order"
-            android:title="Đơn hàng" />
+            android:title="Quản lý sản phẩm" />
         <item
             android:id="@+id/nav_users"
             android:icon="@drawable/ic_user"

@@ -100,73 +100,128 @@ public class OrderController {
         }
     }
 
-    public void getAllOrders(GetOrdersCallback callback) {
-        String url = ApiConfig.BASE_URL + ApiConfig.ENDPOINT_ORDERS;
-        Log.d(TAG, "Getting all orders from: " + url);
+        public void getAllOrders(GetOrdersCallback callback) {
+            String url = ApiConfig.BASE_URL + ApiConfig.ENDPOINT_ALL_ORDERS;
+            Log.d(TAG, "Fetching all orders from: " + url);
+
+            JsonObjectRequest request = ApiConfig.createAuthenticatedRequest(
+                context,
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    Log.d(TAG, "Get orders response: " + response.toString());
+                    try {
+                        if (response.getBoolean("success")) {
+                            JSONObject data = response.getJSONObject("data");
+                            JSONArray ordersArray = data.getJSONArray("orders");
+                            List<Order> orders = new ArrayList<>();
+
+                            for (int i = 0; i < ordersArray.length(); i++) {
+                                JSONObject orderObj = ordersArray.getJSONObject(i);
+                                Order order = parseOrderFromJson(orderObj);
+                                orders.add(order);
+                            }
+                            callback.onSuccess(orders);
+                        } else {
+                            callback.onError("Failed to fetch orders");
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing orders response: " + e.getMessage());
+                        callback.onError("Error parsing response: " + e.getMessage());
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Get orders error: " + error.toString());
+                    if (error.networkResponse != null) {
+                        try {
+                            String responseBody = new String(error.networkResponse.data, "utf-8");
+                            JSONObject errorObj = new JSONObject(responseBody);
+                            callback.onError(errorObj.getString("message"));
+                        } catch (Exception e) {
+                            callback.onError("Network error: " + error.getMessage());
+                        }
+                    } else {
+                        callback.onError("Network error: " + error.getMessage());
+                    }
+                }
+            );
+
+            request.setTag(TAG);
+            requestQueue.add(request);
+        }
+
+    public void updateOrderStatus(String orderId, String status, OrderCallback callback) {
+        String url = ApiConfig.BASE_URL + ApiConfig.ENDPOINT_ORDERS + "/" + orderId + "/" + status;
+        Log.d(TAG, "Updating order status: " + url);
 
         JsonObjectRequest request = ApiConfig.createAuthenticatedRequest(
             context,
-            Request.Method.GET,
+            Request.Method.PUT,
             url,
             null,
             response -> {
-                Log.d(TAG, "Orders response: " + response.toString());
+                Log.d(TAG, "Update order status response: " + response.toString());
                 try {
                     if (response.getBoolean("success")) {
-                        JSONArray ordersArray = response.getJSONArray("data");
-                        List<Order> orders = new ArrayList<>();
-
-                        for (int i = 0; i < ordersArray.length(); i++) {
-                            JSONObject orderObj = ordersArray.getJSONObject(i);
-                            
-                            // Parse products array
-                            JSONArray productsArray = orderObj.getJSONArray("products");
-                            List<Order.OrderProduct> products = new ArrayList<>();
-                            
-                            for (int j = 0; j < productsArray.length(); j++) {
-                                JSONObject productObj = productsArray.getJSONObject(j);
-                                Order.OrderProduct product = new Order.OrderProduct(
-                                    productObj.getString("_id"),
-                                    productObj.getString("name"),
-                                    productObj.getString("image"),
-                                    productObj.getString("price"),
-                                    productObj.getInt("size"),
-                                    productObj.getInt("quantity")
-                                );
-                                products.add(product);
-                            }
-
-                            Order order = new Order(
-                                orderObj.getString("_id"),
-                                orderObj.getString("userId"),
-                                orderObj.getString("name"),
-                                orderObj.getString("phone"),
-                                products,
-                                orderObj.getString("price"),
-                                orderObj.getString("address"),
-                                orderObj.getString("status"),
-                                orderObj.getBoolean("deleted"),
-                                orderObj.getString("createdAt"),
-                                orderObj.getString("updatedAt")
-                            );
-                            Log.d(TAG, "Order status from API: " + orderObj.getString("status"));
-                            orders.add(order);
-                        }
-                        callback.onSuccess(orders);
+                        callback.onSuccess(response.getString("message"));
                     } else {
-                        callback.onError("Failed to load orders");
+                        callback.onError(response.getString("message"));
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "Error parsing orders: " + e.getMessage());
-                    callback.onError("Error parsing orders data");
+                    Log.e(TAG, "Error parsing update status response: " + e.getMessage());
+                    callback.onError("Error parsing response: " + e.getMessage());
                 }
             },
             error -> {
-                Log.e(TAG, "Error getting orders: " + error.toString());
-                callback.onError("Network error: " + error.getMessage());
+                Log.e(TAG, "Update order status error: " + error.toString());
+                if (error.networkResponse != null) {
+                    try {
+                        String responseBody = new String(error.networkResponse.data, "utf-8");
+                        JSONObject errorObj = new JSONObject(responseBody);
+                        callback.onError(errorObj.getString("message"));
+                    } catch (Exception e) {
+                        callback.onError("Network error: " + error.getMessage());
+                    }
+                } else {
+                    callback.onError("Network error: " + error.getMessage());
+                }
             }
         );
 
+        request.setTag(TAG);
         requestQueue.add(request);
+    }
+
+    private Order parseOrderFromJson(JSONObject orderObj) throws Exception {
+        Order order = new Order();
+        order.setId(orderObj.getString("_id"));
+        order.setUserId(orderObj.getString("userId"));
+        order.setName(orderObj.getString("name"));
+        order.setPhone(orderObj.getString("phone"));
+        order.setAddress(orderObj.getString("address"));
+        order.setPrice(orderObj.getString("price"));
+        order.setStatus(orderObj.getString("status"));
+        order.setDeleted(orderObj.getBoolean("deleted"));
+        order.setCreatedAt(orderObj.getString("createdAt"));
+        order.setUpdatedAt(orderObj.getString("updatedAt"));
+
+        JSONArray productsArray = orderObj.getJSONArray("products");
+        List<Order.OrderProduct> products = new ArrayList<>();
+        for (int i = 0; i < productsArray.length(); i++) {
+            JSONObject productObj = productsArray.getJSONObject(i);
+            Order.OrderProduct product = new Order.OrderProduct(
+                productObj.getString("_id"),
+                productObj.getString("name"),
+                productObj.getString("image"),
+                productObj.getString("price"),
+                productObj.getInt("size"),
+                productObj.getInt("quantity")
+            );
+            products.add(product);
+        }
+        order.setProducts(products);
+
+        return order;
     }
 } 

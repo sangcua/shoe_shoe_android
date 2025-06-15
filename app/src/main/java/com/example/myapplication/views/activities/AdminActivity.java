@@ -70,6 +70,12 @@ public class AdminActivity extends AppCompatActivity implements NavigationView.O
             fragment = CategoryFragment.newInstance();
         } else if (id == R.id.nav_products) {
             fragment = ProductFragment.newInstance();
+        } else if (id == R.id.nav_orders) {
+            // Navigate to orders management screen
+            Intent intent = new Intent(this, AdminOrderActivity.class);
+            startActivity(intent);
+            drawer.closeDrawer(GravityCompat.START);
+            return true;
         } else if (id == R.id.nav_logout) {
             // Clear all stored data
             tokenManager.clearAll();
