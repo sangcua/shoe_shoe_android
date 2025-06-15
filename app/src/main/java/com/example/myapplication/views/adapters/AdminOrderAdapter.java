@@ -1,6 +1,7 @@
 package com.example.myapplication.views.adapters;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,18 +20,22 @@ import com.example.myapplication.models.Order;
 import com.google.android.material.chip.Chip;
 
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.OrderViewHolder> {
     private static final String TAG = "AdminOrderAdapter";
     private List<Order> orders;
     private OnOrderActionListener listener;
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm dd/MM/yyyy", Locale.getDefault());
-    private NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+    private SimpleDateFormat inputDateFormat;
+    private SimpleDateFormat outputDateFormat;
     private OrderController orderController;
+    private NumberFormat numberFormat;
 
     public interface OnOrderActionListener {
         void onViewOrder(Order order);
@@ -46,7 +51,14 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Or
         this.listener = listener;
         try {
             this.orderController = new OrderController(listener.getContext());
-            Log.d(TAG, "OrderController initialized successfully");
+            // Initialize date formatters with UTC timezone
+            this.inputDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+            this.inputDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+            this.outputDateFormat = new SimpleDateFormat("HH:mm dd-MM-yyyy", Locale.getDefault());
+            this.outputDateFormat.setTimeZone(TimeZone.getDefault()); // Use local timezone for output
+            // Initialize number format for Vietnamese currency
+            this.numberFormat = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+            Log.d(TAG, "OrderController and formatters initialized successfully");
         } catch (Exception e) {
             Log.e(TAG, "Error initializing OrderController: " + e.getMessage());
         }
@@ -130,6 +142,13 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Or
                 btnConfirm = itemView.findViewById(R.id.btnConfirm);
                 btnCancel = itemView.findViewById(R.id.btnCancel);
                 btnComplete = itemView.findViewById(R.id.btnComplete);
+
+                // Set text color to black
+                tvOrderId.setTextColor(Color.BLACK);
+                tvCustomerName.setTextColor(Color.BLACK);
+                tvAddress.setTextColor(Color.BLACK);
+                tvPriceAndTime.setTextColor(Color.BLACK);
+
                 Log.d(TAG, "All views found successfully");
             } catch (Exception e) {
                 Log.e(TAG, "Error finding views: " + e.getMessage());
@@ -140,14 +159,40 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Or
             Log.d(TAG, "Binding order: " + order.getId());
             try {
                 // Set order ID
-                tvOrderId.setText("Order #" + order.getId());
+                tvOrderId.setText("Đơn hàng #" + order.getId());
 
                 // Set customer info
                 tvCustomerName.setText(order.getName());
                 tvAddress.setText(order.getAddress() + "\n" + order.getPhone());
 
-                // Set price and time
-                String priceAndTime = order.getPrice() + "đ - " + order.getCreatedAt();
+                // Format price and time
+                String formattedPrice = "";
+                try {
+                    // Remove any non-numeric characters except decimal point
+                    String priceStr = order.getPrice().replaceAll("[^\\d.]", "");
+                    double price = Double.parseDouble(priceStr);
+                    formattedPrice = numberFormat.format(price) + "đ";
+                } catch (Exception e) {
+                    Log.e(TAG, "Error formatting price: " + e.getMessage());
+                    formattedPrice = order.getPrice() + "đ";
+                }
+
+                String formattedDate = "";
+                try {
+                    String createdAt = order.getCreatedAt();
+                    Log.d(TAG, "Original date string: " + createdAt);
+                    
+                    Date date = inputDateFormat.parse(createdAt);
+                    if (date != null) {
+                        formattedDate = outputDateFormat.format(date);
+                        Log.d(TAG, "Parsed date: " + date.toString());
+                        Log.d(TAG, "Formatted date: " + formattedDate);
+                    }
+                } catch (ParseException e) {
+                    Log.e(TAG, "Error parsing date: " + e.getMessage());
+                    formattedDate = order.getCreatedAt(); // Fallback to original string
+                }
+                String priceAndTime = formattedPrice + " - " + formattedDate;
                 tvPriceAndTime.setText(priceAndTime);
 
                 // Set status
@@ -157,18 +202,24 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Or
                 setupButtons(order);
 
                 // Set click listeners
-                btnView.setOnClickListener(v -> listener.onViewOrder(order));
+                btnView.setOnClickListener(v -> {
+                    Log.d(TAG, "View button clicked for order: " + order.getId());
+                    listener.onViewOrder(order);
+                });
                 btnConfirm.setOnClickListener(v -> {
+                    Log.d(TAG, "Confirm button clicked for order: " + order.getId());
+                    Log.d(TAG, "Current order status: " + order.getStatus());
                     listener.onConfirmOrder(order);
-                    updateOrderStatus(order.getId(), "confirm");
                 });
                 btnCancel.setOnClickListener(v -> {
+                    Log.d(TAG, "Cancel button clicked for order: " + order.getId());
+                    Log.d(TAG, "Current order status: " + order.getStatus());
                     listener.onCancelOrder(order);
-                    updateOrderStatus(order.getId(), "cancel");
                 });
                 btnComplete.setOnClickListener(v -> {
+                    Log.d(TAG, "Complete button clicked for order: " + order.getId());
+                    Log.d(TAG, "Current order status: " + order.getStatus());
                     listener.onCompleteOrder(order);
-                    updateOrderStatus(order.getId(), "complete");
                 });
                 Log.d(TAG, "Order bound successfully");
             } catch (Exception e) {
@@ -180,22 +231,26 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Or
             Log.d(TAG, "Updating status chip: " + status);
             try {
                 switch (status) {
-                    case "chờ xác nhận":
+                    case "pending":
                         chipStatus.setText("Chờ xác nhận");
                         chipStatus.setChipBackgroundColorResource(android.R.color.holo_orange_light);
                         break;
-                    case "đang giao hàng":
-                        chipStatus.setText("Đang giao hàng");
+                    case "confirmed":
+                        chipStatus.setText("Đã xác nhận");
                         chipStatus.setChipBackgroundColorResource(android.R.color.holo_blue_light);
                         break;
-                    case "hoàn thành":
+                    case "completed":
                         chipStatus.setText("Hoàn thành");
                         chipStatus.setChipBackgroundColorResource(android.R.color.holo_green_light);
                         break;
-                    case "đã hủy":
+                    case "cancelled":
                         chipStatus.setText("Đã hủy");
                         chipStatus.setChipBackgroundColorResource(android.R.color.holo_red_light);
                         break;
+                    default:
+                        Log.e(TAG, "Unknown status: " + status);
+                        chipStatus.setText(status);
+                        chipStatus.setChipBackgroundColorResource(android.R.color.holo_orange_light);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Error updating status chip: " + e.getMessage());
@@ -205,49 +260,41 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Or
         private void setupButtons(Order order) {
             Log.d(TAG, "Setting up buttons for order: " + order.getId() + " with status: " + order.getStatus());
             try {
+
+
+                // Set visibility based on status
                 switch (order.getStatus()) {
                     case "chờ xác nhận":
+                        Log.d(TAG, "Order is pending - showing confirm and cancel buttons");
                         btnConfirm.setVisibility(View.VISIBLE);
                         btnCancel.setVisibility(View.VISIBLE);
                         btnComplete.setVisibility(View.GONE);
                         break;
                     case "đang giao hàng":
+                        Log.d(TAG, "Order is confirmed - showing complete button");
                         btnConfirm.setVisibility(View.GONE);
-                        btnCancel.setVisibility(View.VISIBLE);
+                        btnCancel.setVisibility(View.GONE);
                         btnComplete.setVisibility(View.VISIBLE);
                         break;
-                    case "hoàn thành":
                     case "đã hủy":
                         btnConfirm.setVisibility(View.GONE);
                         btnCancel.setVisibility(View.GONE);
                         btnComplete.setVisibility(View.GONE);
+
+                    case "đã giao hàng":
+                        Log.d(TAG, "Order is " + order.getStatus() + " - showing only view button");
+                        btnConfirm.setVisibility(View.GONE);
+                        btnCancel.setVisibility(View.GONE);
+                        btnComplete.setVisibility(View.GONE);
                         break;
+                    default:
+                        // Reset all buttons visibility first
+
+                        Log.e(TAG, "Unknown status for button setup: " + order.getStatus());
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Error setting up buttons: " + e.getMessage());
             }
-        }
-
-        private void updateOrderStatus(String orderId, String status) {
-            Log.d(TAG, "Updating order status: " + orderId + " to " + status);
-            if (orderController == null) {
-                Log.e(TAG, "OrderController is null");
-                return;
-            }
-            orderController.updateOrderStatus(orderId, status, new OrderController.OrderCallback() {
-                @Override
-                public void onSuccess(String message) {
-                    Log.d(TAG, "Order status updated successfully: " + message);
-                    Toast.makeText(listener.getContext(), message, Toast.LENGTH_SHORT).show();
-                    loadOrders(); // Reload orders after status update
-                }
-
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, "Error updating order status: " + error);
-                    Toast.makeText(listener.getContext(), error, Toast.LENGTH_SHORT).show();
-                }
-            });
         }
     }
 } 

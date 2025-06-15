@@ -115,7 +115,7 @@ public class OrderStatusActivity extends AppCompatActivity {
 
     private void loadOrders() {
         loadingManager.show("Đang tải đơn hàng...");
-        orderController.getAllOrders(new OrderController.GetOrdersCallback() {
+        orderController.getUserOrders(new OrderController.GetOrdersCallback() {
             @Override
             public void onSuccess(List<Order> orders) {
                 loadingManager.dismiss();
