@@ -31,6 +31,7 @@ import java.util.TimeZone;
 public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.OrderViewHolder> {
     private static final String TAG = "AdminOrderAdapter";
     private List<Order> orders;
+    private List<Order> originalOrders; // Lưu danh sách gốc
     private OnOrderActionListener listener;
     private SimpleDateFormat inputDateFormat;
     private SimpleDateFormat outputDateFormat;
@@ -48,6 +49,7 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Or
     public AdminOrderAdapter(List<Order> orders, OnOrderActionListener listener) {
         Log.d(TAG, "Constructor called");
         this.orders = orders;
+        this.originalOrders = new ArrayList<>(orders); // Lưu danh sách gốc
         this.listener = listener;
         try {
             this.orderController = new OrderController(listener.getContext());
@@ -64,6 +66,24 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Or
         }
     }
 
+    public void filterByStatus(String status) {
+        Log.d(TAG, "Filtering by status: " + status);
+        if (status.equals("Tất cả")) {
+            orders.clear();
+            orders.addAll(originalOrders);
+        } else {
+            List<Order> filteredList = new ArrayList<>();
+            for (Order order : originalOrders) {
+                if (order.getStatus().equals(status)) {
+                    filteredList.add(order);
+                }
+            }
+            orders.clear();
+            orders.addAll(filteredList);
+        }
+        notifyDataSetChanged();
+    }
+
     public void loadOrders() {
         Log.d(TAG, "loadOrders called");
         if (orderController == null) {
@@ -76,6 +96,8 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Or
                 Log.d(TAG, "Orders loaded successfully, count: " + orderList.size());
                 orders.clear();
                 orders.addAll(orderList);
+                originalOrders.clear();
+                originalOrders.addAll(orderList);
                 notifyDataSetChanged();
             }
 
@@ -115,6 +137,7 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Or
     public void updateOrders(List<Order> newOrders) {
         Log.d(TAG, "updateOrders called with size: " + (newOrders != null ? newOrders.size() : 0));
         this.orders = newOrders;
+        this.originalOrders = new ArrayList<>(newOrders);
         notifyDataSetChanged();
     }
 

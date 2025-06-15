@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -72,6 +73,8 @@ public class AdminOrderActivity extends AppCompatActivity implements AdminOrderA
             // Load orders from API
             adapter.loadOrders();
             Log.d(TAG, "loadOrders called");
+
+            setupFilterButtons();
         } catch (Exception e) {
             Log.e(TAG, "Error in onCreate: " + e.getMessage(), e);
         }
@@ -205,5 +208,59 @@ public class AdminOrderActivity extends AppCompatActivity implements AdminOrderA
         } catch (Exception e) {
             Log.e(TAG, "Error in onCompleteOrder: " + e.getMessage(), e);
         }
+    }
+
+    private void setupFilterButtons() {
+        Button btnAll = findViewById(R.id.chipAll);
+        Button btnPending = findViewById(R.id.chipPending);
+        Button btnConfirmed = findViewById(R.id.chipConfirmed);
+        Button btnCompleted = findViewById(R.id.chipCompleted);
+        Button btnCancelled = findViewById(R.id.chipCancelled);
+
+        btnAll.setOnClickListener(v -> {
+            updateButtonBackground(btnAll);
+            adapter.filterByStatus("Tất cả");
+        });
+
+        btnPending.setOnClickListener(v -> {
+            updateButtonBackground(btnPending);
+            adapter.filterByStatus("chờ xác nhận");
+        });
+
+        btnConfirmed.setOnClickListener(v -> {
+            updateButtonBackground(btnConfirmed);
+            adapter.filterByStatus("đang giao hàng");
+        });
+
+        btnCompleted.setOnClickListener(v -> {
+            updateButtonBackground(btnCompleted);
+            adapter.filterByStatus("đã giao hàng");
+        });
+
+        btnCancelled.setOnClickListener(v -> {
+            updateButtonBackground(btnCancelled);
+            adapter.filterByStatus("đã hủy");
+        });
+
+        // Set initial state
+        updateButtonBackground(btnAll);
+    }
+
+    private void updateButtonBackground(Button selectedButton) {
+        // Reset all buttons
+        Button[] buttons = {
+            findViewById(R.id.chipAll),
+            findViewById(R.id.chipPending),
+            findViewById(R.id.chipConfirmed),
+            findViewById(R.id.chipCompleted),
+            findViewById(R.id.chipCancelled)
+        };
+
+        for (Button button : buttons) {
+            button.setBackgroundResource(R.drawable.bg_rounded_corner);
+        }
+
+        // Set selected button
+        selectedButton.setBackgroundResource(R.drawable.bg_rounded_corner_selected);
     }
 } 

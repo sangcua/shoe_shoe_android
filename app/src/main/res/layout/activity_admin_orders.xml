@@ -47,25 +47,25 @@
                 android:id="@+id/chipPending"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Chờ xác nhận" />
+                android:text="chờ xác nhận" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipConfirmed"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Đã xác nhận" />
+                android:text="đang giao hàng" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipCompleted"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Hoàn thành" />
+                android:text="đã giao hàng" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipCancelled"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Đã hủy" />
+                android:text="đã hủy" />
 
         </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
