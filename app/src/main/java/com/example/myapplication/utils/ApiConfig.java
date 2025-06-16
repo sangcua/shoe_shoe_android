@@ -14,7 +14,7 @@ public class ApiConfig {
     private static final String TAG = "ApiConfigNANCJD";
     
     // Base URL - Using 10.0.2.2 for emulator or your computer's IP for physical device
-    public static final String BASE_URL = "http://192.168.0.122:3000/api/";
+    public static final String BASE_URL = "http://192.168.1.12:3000/api/";
 
     // API Endpoints
     public static final String ENDPOINT_PRODUCTS = "products";
@@ -27,6 +27,10 @@ public class ApiConfig {
     public static final String ENDPOINT_ORDERS = "orders";
     public static final String ENDPOINT_ALL_ORDERS = "orders/allorders";
     public static final String ENDPOINT_USER_ADDRESSES = "users/addresses";
+    public static final String ENDPOINT_TOTAL_CATEGORIES = "totalcategories";
+    public static final String ENDPOINT_TOTAL_PRODUCTS = "totalproducts";
+    public static final String ENDPOINT_TOTAL_ORDERS = "totalorders";
+    public static final String ENDPOINT_TOTAL_USERS = "totalusers";
 
     
     public static final int TIMEOUT_MS = 10000; 
